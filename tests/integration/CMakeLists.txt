@@ -1,5 +1,7 @@
 add_executable(integration_tests
     test_pipeline.cpp
+    test_phase2_pipeline.cpp
+    ${CMAKE_SOURCE_DIR}/engine/memory/AllocationGuard.cpp
 )
 
 target_compile_definitions(integration_tests PRIVATE

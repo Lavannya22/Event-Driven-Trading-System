@@ -4,8 +4,9 @@ import OrderBookView from './components/OrderBookView'
 import TradesView    from './components/TradesView'
 import ReplayView    from './components/ReplayView'
 import MetricsView   from './components/MetricsView'
+import PoolsView     from './components/PoolsView'
 
-const TABS = ['Order Book', 'Trades', 'Replay', 'Metrics']
+const TABS = ['Order Book', 'Trades', 'Replay', 'Metrics', 'Pools']
 
 export default function App() {
   const [tab, setTab]     = useState(0)
@@ -52,6 +53,7 @@ export default function App() {
         {data && tab === 1 && <TradesView    data={data.trades}    />}
         {data && tab === 2 && <ReplayView    data={data.replay}    />}
         {data && tab === 3 && <MetricsView   data={data.metrics}   />}
+        {data && tab === 4 && <PoolsView     pools={data.pools ?? []} startup={data.startup ?? {}} />}
       </main>
 
       {/* Footer: last snapshot timestamp */}

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <span>
 #include "engine/events/Event.hpp"
 #include "engine/orderbook/OrderBook.hpp"
 
@@ -26,11 +28,26 @@ enum class MatchResult : uint8_t {
     OrderRejected,  // order book rejected the insert (out of range, duplicate id)
 };
 
+// Fixed-size output from one matching operation.
+// Uses an inline array — no heap allocation.
+// MAX_EVENTS: at most one fill per resting order touched + one STP cancel.
 struct MatchOutput {
-    MatchResult        result{MatchResult::Ok};
-    // TradeExecution events + possibly a CancelOrder event on STP.
-    // Downstream pipeline reads these in order.
-    std::vector<Event> events;
+    static constexpr std::size_t MAX_EVENTS = 16;
+
+    MatchResult result{MatchResult::Ok};
+    std::array<Event, MAX_EVENTS> events{};
+    std::size_t event_count{0};
+
+    void push(const Event& e) noexcept {
+        if (event_count < MAX_EVENTS) events[event_count++] = e;
+    }
+
+    bool empty() const noexcept { return event_count == 0; }
+
+    // Span view for range-for compatibility.
+    std::span<const Event> event_span() const noexcept {
+        return {events.data(), event_count};
+    }
 };
 
 class MatchingEngine {

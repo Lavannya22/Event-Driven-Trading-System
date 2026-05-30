@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | tail -5 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -10\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 --target unit_tests 2>&1 | tail -5 && ctest --test-dir ~/build/trading-engine -R 'SPSCQueue.Stress' --output-on-failure 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake -S /mnt/d/Git_personal/Event-Driven-Trading-System -B ~/build/trading-engine -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 2>&1 | tail -3 && cmake --build ~/build/trading-engine -j4 2>&1 | tail -20\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | grep -E 'error:|warning:|Built target|Linking' | grep -v '_deps' | head -25\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | tail -3 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -10\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | grep -E 'error:|Linking|Built target' | grep -v '_deps' | head -25\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"ctest --test-dir ~/build/trading-engine -R 'ZeroUnexpected' --output-on-failure 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | grep -E 'error:|Linking|Built target' | grep -v '_deps' | head -30\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -14\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"python3 -m pip install fpdf2 --quiet 2>&1 | tail -3\")"
+    ]
+  }
+}

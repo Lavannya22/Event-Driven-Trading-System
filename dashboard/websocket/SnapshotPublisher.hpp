@@ -2,10 +2,14 @@
 
 #include <chrono>
 #include <mutex>
+#include <string>
 #include "dashboard/websocket/Snapshot.hpp"
 #include "engine/events/Event.hpp"
+#include "engine/memory/ObjectPool.hpp"
+#include "engine/memory/StartupAllocator.hpp"
 #include "engine/orderbook/OrderBook.hpp"
 #include "engine/replay/ReplayController.hpp"
+#include "engine/runtime/StartupValidator.hpp"
 #include "engine/strategy/StrategyEngine.hpp"
 
 namespace trading::dashboard {
@@ -62,6 +66,38 @@ public:
         snap_.metrics.queue_occupancy = queue_occupancy;
         snap_.metrics.throughput_eps  = throughput_eps;
         snap_.metrics.avg_latency_us  = avg_latency_us;
+    }
+
+    // Publish startup report (call once after StartupAllocator::start()).
+    void update_startup(const StartupAllocator& alloc,
+                        const StartupReport& report,
+                        bool validation_passed) {
+        std::lock_guard lock(mu_);
+        auto& s                   = snap_.startup;
+        s.allocator_started       = alloc.started();
+        s.mlockall_success        = report.mlockall_success;
+        s.event_pool_capacity     = report.event_pool_capacity;
+        s.order_pool_capacity     = report.order_pool_capacity;
+        s.execution_pool_capacity = report.execution_pool_capacity;
+        s.signal_pool_capacity    = report.signal_pool_capacity;
+        s.validation_passed       = validation_passed;
+    }
+
+    // Refresh live pool utilisation metrics (call periodically from replay loop).
+    void update_pools(const StartupAllocator& alloc) {
+        if (!alloc.started()) return;
+        std::lock_guard lock(mu_);
+        snap_.pools.clear();
+        auto add = [&](const char* name, auto* pool) {
+            if (!pool) return;
+            snap_.pools.push_back({name,
+                pool->capacity(), pool->used(),
+                pool->available(), pool->exhaustion_count()});
+        };
+        add("event",     alloc.event_pool());
+        add("order",     alloc.order_pool());
+        add("execution", alloc.exec_pool());
+        add("signal",    alloc.signal_pool());
     }
 
     EngineSnapshot get_snapshot() {

@@ -45,12 +45,32 @@ struct Metrics {
     uint64_t noops{0};
 };
 
+struct PoolMetrics {
+    std::string name;
+    std::size_t capacity{0};
+    std::size_t used{0};
+    std::size_t available{0};
+    std::size_t exhaustion_count{0};
+};
+
+struct StartupMetrics {
+    bool        allocator_started{false};
+    bool        mlockall_success{false};
+    std::size_t event_pool_capacity{0};
+    std::size_t order_pool_capacity{0};
+    std::size_t execution_pool_capacity{0};
+    std::size_t signal_pool_capacity{0};
+    bool        validation_passed{false};
+};
+
 struct EngineSnapshot {
     static constexpr int       MAX_TRADES = 50;
     OrderBookSnapshot          orderbook;
     std::deque<TradeEvent>     recent_trades;
     ReplayStats                replay;
     Metrics                    metrics;
+    std::vector<PoolMetrics>   pools;      // live pool utilisation
+    StartupMetrics             startup;    // one-time startup report
     uint64_t                   snapshot_ts{0};  // wall-clock ms
 };
 

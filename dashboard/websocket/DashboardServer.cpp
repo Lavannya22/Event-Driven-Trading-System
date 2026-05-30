@@ -131,13 +131,35 @@ std::string DashboardServer::to_json(const EngineSnapshot& snap) {
         {"noops",           snap.metrics.noops}
     };
 
+    // --- pool utilisation ---
+    json pools = json::array();
+    for (const auto& p : snap.pools)
+        pools.push_back({{"name",             p.name},
+                         {"capacity",         p.capacity},
+                         {"used",             p.used},
+                         {"available",        p.available},
+                         {"exhaustion_count", p.exhaustion_count}});
+
+    // --- startup report ---
+    json startup = {
+        {"allocator_started",       snap.startup.allocator_started},
+        {"mlockall_success",        snap.startup.mlockall_success},
+        {"event_pool_capacity",     snap.startup.event_pool_capacity},
+        {"order_pool_capacity",     snap.startup.order_pool_capacity},
+        {"execution_pool_capacity", snap.startup.execution_pool_capacity},
+        {"signal_pool_capacity",    snap.startup.signal_pool_capacity},
+        {"validation_passed",       snap.startup.validation_passed}
+    };
+
     return json{
         {"type",      "snapshot"},
         {"ts",        snap.snapshot_ts},
         {"orderbook", std::move(ob)},
         {"trades",    std::move(trades)},
         {"replay",    std::move(replay)},
-        {"metrics",   std::move(metrics)}
+        {"metrics",   std::move(metrics)},
+        {"pools",     std::move(pools)},
+        {"startup",   std::move(startup)}
     }.dump();
 }
 

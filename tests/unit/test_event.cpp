@@ -4,8 +4,18 @@
 
 using namespace trading;
 
-TEST(EventModel, SizeIs40Bytes) {
-    EXPECT_EQ(sizeof(Event), 40u);
+TEST(EventModel, SizeIs64Bytes) {
+    EXPECT_EQ(sizeof(Event), 64u);
+}
+
+TEST(EventModel, IsAlignedTo64Bytes) {
+    EXPECT_EQ(alignof(Event), 64u);
+}
+
+TEST(EventModel, SequenceDefaultsToZero) {
+    Event e{};
+    EXPECT_EQ(e.sequence, 0u);
+    EXPECT_EQ(e.reserved, 0u);
 }
 
 TEST(EventModel, IsTriviallyCopiable) {

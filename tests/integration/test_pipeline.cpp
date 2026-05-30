@@ -45,7 +45,7 @@ static PipelineResult run_pipeline(ReplayController& rc) {
         switch (event_type(ev)) {
             case EventType::NewOrder: {
                 auto out = matcher.process_new_order(book, ev);
-                for (const auto& e : out.events) {
+                for (const auto& e : out.event_span()) {
                     if (event_type(e) == EventType::TradeExecution)
                         result.executions.push_back(e);
                     else if (event_type(e) == EventType::CancelOrder)

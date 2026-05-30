@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Event-Driven Trading Engine — Phase 1 & 2 Summary</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #1a1a2e;
+    background: #fff;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    page-break-after: always;
+  }
+  .cover h1 { font-size: 32pt; font-weight: 700; letter-spacing: 1px; margin-bottom: 16px; }
+  .cover .subtitle { font-size: 16pt; color: #a0c4ff; margin-bottom: 8px; }
+  .cover .meta { font-size: 11pt; color: #888; margin-top: 40px; }
+  .cover .badge {
+    display: inline-block;
+    background: #00d4aa22;
+    border: 1px solid #00d4aa55;
+    color: #00d4aa;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 10pt;
+    margin: 6px 4px;
+  }
+
+  /* ── Page layout ── */
+  .page { max-width: 900px; margin: 0 auto; padding: 48px 48px 60px; }
+
+  /* ── Phase header banner ── */
+  .phase-banner {
+    padding: 28px 36px;
+    border-radius: 10px;
+    margin-bottom: 36px;
+    page-break-before: always;
+  }
+  .phase-1 { background: linear-gradient(135deg, #1a3a5c, #0d2137); color: #fff; }
+  .phase-2 { background: linear-gradient(135deg, #1a2c1a, #0d200d); color: #fff; }
+  .phase-banner h2 { font-size: 22pt; font-weight: 700; margin-bottom: 6px; }
+  .phase-banner p  { font-size: 11pt; opacity: 0.85; }
+  .phase-banner .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 9pt;
+    margin-top: 12px;
+    margin-right: 6px;
+  }
+
+  /* ── Sections ── */
+  h3 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #0d2137;
+    margin: 28px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #e8eef5;
+  }
+  h4 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #243b55;
+    margin: 18px 0 6px;
+  }
+  p  { margin-bottom: 10px; }
+  ul { margin: 8px 0 12px 22px; }
+  li { margin-bottom: 4px; }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 10pt;
+  }
+  th {
+    background: #f0f4f8;
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: #243b55;
+    border-bottom: 2px solid #d0dae4;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #edf1f5;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f7fafc; }
+
+  /* ── Code blocks ── */
+  pre {
+    background: #1e2530;
+    color: #c9d1d9;
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 9pt;
+    overflow-x: auto;
+    margin: 12px 0 16px;
+    line-height: 1.5;
+  }
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: #edf2f7;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9.5pt;
+    color: #c0392b;
+  }
+
+  /* ── Stat cards ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 16px 0 24px;
+  }
+  .stat-card {
+    background: #f7fafc;
+    border: 1px solid #dde4ee;
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 22pt; font-weight: 700; color: #0d2137; }
+  .stat-card .lbl { font-size: 9pt; color: #7a8ea3; margin-top: 3px; }
+
+  .stat-card.green .num { color: #1a7a4a; }
+  .stat-card.blue  .num { color: #1a4a8a; }
+
+  /* ── Info boxes ── */
+  .info-box {
+    border-left: 4px solid #4a90d9;
+    background: #f0f6ff;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+  .warn-box {
+    border-left: 4px solid #e67e22;
+    background: #fff8f0;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 16px 0;
+  }
+  .pipe-box {
+    background: #0d2137;
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 5px;
+    font-size: 9.5pt;
+    font-weight: 500;
+  }
+  .pipe-arrow { color: #7a8ea3; font-size: 14pt; font-weight: 300; }
+
+  /* ── Print / PDF ── */
+  @media print {
+    body { font-size: 10.5pt; }
+    .cover { min-height: auto; padding: 80px 40px; }
+    .no-print { display: none; }
+    h3 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    pre  { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COVER PAGE
+═══════════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div style="font-size:11pt; letter-spacing:3px; text-transform:uppercase; color:#a0c4ff; margin-bottom:28px;">
+    Technical Summary
+  </div>
+  <h1>Event-Driven Trading Engine</h1>
+  <div class="subtitle">Phase 1 &amp; Phase 2 — Engineering Log</div>
+
+  <div style="margin:40px 0 20px;">
+    <span class="badge">C++20</span>
+    <span class="badge">CMake 4.2</span>
+    <span class="badge">Clang 21</span>
+    <span class="badge">GoogleTest</span>
+    <span class="badge">React 18</span>
+    <span class="badge">PostgreSQL</span>
+    <span class="badge">WSL2 / Ubuntu</span>
+  </div>
+
+  <div style="margin-top:20px; color:#a0c4ff; font-size:13pt; font-weight:600;">
+    187 tests passing &nbsp;·&nbsp; 0 failures &nbsp;·&nbsp; Zero runtime allocations
+  </div>
+
+  <div class="meta">
+    Repository: Event-Driven-Trading-System &nbsp;·&nbsp; 2026
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 1
+═══════════════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <div class="phase-banner phase-1">
+    <h2>Phase 1 — MVP &amp; Full Pipeline Integration</h2>
+    <p>Build a fully functional, deterministic trading engine MVP with correctness, deterministic replay, component integration, observability, persistence, and testing.</p>
+    <span class="tag">Correctness first</span>
+    <span class="tag">No optimization</span>
+    <span class="tag">Architecture validation</span>
+  </div>
+
+  <!-- Outcome stats -->
+  <div class="stats">
+    <div class="stat-card green"><div class="num">112</div><div class="lbl">Tests written</div></div>
+    <div class="stat-card green"><div class="num">111</div><div class="lbl">Tests passing</div></div>
+    <div class="stat-card blue"><div class="num">1</div><div class="lbl">Skipped (Postgres)</div></div>
+    <div class="stat-card"><div class="num">40B</div><div class="lbl">Event struct size</div></div>
+  </div>
+
+  <!-- Pipeline -->
+  <h3>System Pipeline</h3>
+  <div class="pipeline">
+    <div class="pipe-box">Replay</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">Strategy</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">Matching</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">Execution</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">Persistence</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">Dashboard</div>
+  </div>
+
+  <!-- Components -->
+  <h3>Components Built</h3>
+
+  <table>
+    <tr><th>Component</th><th>File(s)</th><th>Description</th></tr>
+    <tr>
+      <td><strong>Event Model</strong></td>
+      <td><code>engine/events/Event.hpp</code></td>
+      <td>40-byte POD struct, memcpy-safe. Side encoded in bit 16 of <code>type</code> field. Factory helpers: <code>make_new_order</code>, <code>make_cancel_order</code>, etc.</td>
+    </tr>
+    <tr>
+      <td><strong>SPSC Queue</strong></td>
+      <td><code>engine/queues/SPSCQueue.hpp</code></td>
+      <td>Lock-free ring buffer, power-of-two capacity, acquire/release atomics. No heap allocation after construction.</td>
+    </tr>
+    <tr>
+      <td><strong>Order Book</strong></td>
+      <td><code>engine/orderbook/OrderBook.hpp+cpp</code></td>
+      <td>Array-based bounded price range [1, 200,000]. Insert, cancel, modify, reduce operations. Top-N bid/ask depth snapshots.</td>
+    </tr>
+    <tr>
+      <td><strong>Matching Engine</strong></td>
+      <td><code>engine/matching/MatchingEngine.hpp+cpp</code></td>
+      <td>Price-time priority. Full and partial fills. Self-Trade Prevention (STP): cancel aggressor. Participant ID in upper 16 bits of order_id.</td>
+    </tr>
+    <tr>
+      <td><strong>Strategy Engine</strong></td>
+      <td><code>engine/strategy/Strategy.hpp</code></td>
+      <td>Abstract Strategy interface. Three built-ins: <code>PassThroughStrategy</code>, <code>NullStrategy</code>, <code>EventTypeFilterStrategy</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Replay Engine</strong></td>
+      <td><code>engine/replay/</code></td>
+      <td><code>ReplayController</code> abstract interface. <code>SequentialReplayController</code> (CSV). <code>VectorReplayController</code> (in-memory). Out-of-order timestamp detection.</td>
+    </tr>
+    <tr>
+      <td><strong>PostgreSQL Writer</strong></td>
+      <td><code>engine/persistence/PostgresWriter.hpp+cpp</code></td>
+      <td>Async background writer thread. Queue: mutex + condvar. UUID v4 run IDs. <code>WITH_POSTGRES</code> compile guard — no-op fallback when libpq absent.</td>
+    </tr>
+    <tr>
+      <td><strong>WebSocket Dashboard</strong></td>
+      <td><code>dashboard/websocket/</code></td>
+      <td>uWebSockets v20 server. <code>SnapshotPublisher</code> bridge (mutex-protected). Broadcasts JSON every 200ms. Never blocks engine threads.</td>
+    </tr>
+    <tr>
+      <td><strong>React Frontend</strong></td>
+      <td><code>dashboard/frontend/</code></td>
+      <td>4 views: Order Book, Trades, Replay, Metrics. React 18 + Vite + TailwindCSS. WebSocket auto-reconnect.</td>
+    </tr>
+  </table>
+
+  <!-- Key design decisions -->
+  <h3>Key Design Decisions</h3>
+
+  <h4>Side Encoding — bit 16 of <code>Event.type</code></h4>
+  <p>The spec's 40-byte Event struct has no <code>side</code> field. Side (Bid/Ask) is packed into bit 16 of <code>type</code>, keeping the struct exactly 40 bytes and memcpy-safe.</p>
+  <pre>type field layout:
+  [15: 0]  EventType value (1–5)
+  [16]     Side: 0 = Bid, 1 = Ask
+  [31:17]  reserved (0)</pre>
+
+  <h4>STP via Participant ID in <code>order_id</code></h4>
+  <p>Self-trade prevention identifies participants without adding a struct field. Participant ID occupies the upper 16 bits of <code>order_id</code>:</p>
+  <pre>order_id: [63:48] participant_id | [47:0] sequence
+Participant 0 = anonymous (STP disabled)</pre>
+
+  <h4>CSV Format — Optional 7th Field</h4>
+  <p>Extended the spec's 6-field CSV format with an optional <code>side</code> column (0=Bid, 1=Ask, default Bid):</p>
+  <pre>timestamp,symbol_id,event_type,price,quantity,order_id[,side]</pre>
+
+  <h4>PostgreSQL Async Pattern</h4>
+  <p>The engine hot path is never blocked by database I/O. All writes are enqueued to a background thread that drains to PostgreSQL via libpq. <code>flush()</code> uses a stack-allocated <code>atomic&lt;bool&gt;</code> sentinel — safe because the caller spin-waits before returning.</p>
+
+  <!-- Testing -->
+  <h3>Testing</h3>
+  <table>
+    <tr><th>Suite</th><th>Tests</th><th>Coverage</th></tr>
+    <tr><td>EventModel</td><td>11</td><td>POD layout, side encoding, memcpy safety, factory helpers</td></tr>
+    <tr><td>SPSCQueue</td><td>11</td><td>FIFO ordering, capacity, wraparound, concurrent producer/consumer</td></tr>
+    <tr><td>OrderBook</td><td>27</td><td>Insert, cancel, modify, reduce, best bid/ask, depth, FIFO, out-of-range</td></tr>
+    <tr><td>MatchingEngine</td><td>19</td><td>Full/partial fills, price-time priority, STP, multi-level sweeps</td></tr>
+    <tr><td>StrategyEngine</td><td>18</td><td>Signal/noop counters, strategy swap, EventTypeFilter, determinism</td></tr>
+    <tr><td>ReplayEngine</td><td>14</td><td>CSV + vector replay, reset, out-of-order detection, polymorphic usage</td></tr>
+    <tr><td>Pipeline (integration)</td><td>12</td><td>Full replay correctness, determinism, STP end-to-end, Postgres (skipped)</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>112</strong></td><td>111 passing, 1 skipped</td></tr>
+  </table>
+
+  <!-- Sanitizers -->
+  <h3>Build System</h3>
+  <ul>
+    <li>CMake 4.2 · Clang 21.1.8 · C++20 · GoogleTest v1.14.0</li>
+    <li>Build lives on Linux filesystem (<code>~/build/trading-engine/</code>) — CMake cannot write to NTFS <code>/mnt/d/</code></li>
+    <li>Separate sanitizer targets: <code>-DSANITIZER=address|thread|undefined</code></li>
+    <li>PostgreSQL optional: <code>find_package(PostgreSQL)</code> → <code>WITH_POSTGRES=1</code> or no-op fallback</li>
+    <li>uWebSockets v20 + uSockets (no SSL, epoll) + nlohmann/json via FetchContent</li>
+  </ul>
+
+</div><!-- end .page -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 2
+═══════════════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <div class="phase-banner phase-2">
+    <h2>Phase 2 — Deterministic Foundation &amp; Allocation-Free Runtime</h2>
+    <p>Transform the Phase 1 MVP into a deterministic, allocation-free, benchmarkable system. Zero unexpected heap allocations during replay execution.</p>
+    <span class="tag">Zero runtime allocs</span>
+    <span class="tag">Cache-aligned structs</span>
+    <span class="tag">Multi-symbol routing</span>
+    <span class="tag">Pool-based memory</span>
+  </div>
+
+  <!-- Outcome stats -->
+  <div class="stats">
+    <div class="stat-card green"><div class="num">187</div><div class="lbl">Tests written</div></div>
+    <div class="stat-card green"><div class="num">186</div><div class="lbl">Tests passing</div></div>
+    <div class="stat-card blue"><div class="num">0</div><div class="lbl">Hot-path allocs</div></div>
+    <div class="stat-card"><div class="num">64B</div><div class="lbl">Event struct size</div></div>
+  </div>
+
+  <!-- Pipeline -->
+  <h3>Phase 2 Memory Architecture</h3>
+  <div class="pipeline">
+    <div class="pipe-box">StartupAllocator</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">ObjectPool&lt;T&gt;</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">Engine hot path</div><div class="pipe-arrow">→</div>
+    <div class="pipe-box">pool.release()</div>
+  </div>
+  <div class="info-box">
+    All heap allocation happens before <code>g_engine_running = true</code>. After that, the <code>AllocationGuard</code> overrides <code>operator new</code> and asserts zero unexpected allocations.
+  </div>
+
+  <!-- Components -->
+  <h3>Components Built</h3>
+
+  <table>
+    <tr><th>Component</th><th>File(s)</th><th>Description</th></tr>
+    <tr>
+      <td><strong>ObjectPool&lt;T&gt;</strong></td>
+      <td><code>engine/memory/ObjectPool.hpp</code></td>
+      <td>Fixed-capacity pool. O(1) allocate and release via a stack of free pointers. Pre-allocates storage in constructor. Returns <code>nullptr</code> on exhaustion — never throws or calls malloc.</td>
+    </tr>
+    <tr>
+      <td><strong>StartupAllocator</strong></td>
+      <td><code>engine/memory/StartupAllocator.hpp+cpp</code></td>
+      <td>Creates pools for Event (65536), Order (16384), ExecutionReport (16384), SignalRecord (16384) at startup. Optionally calls <code>mlockall(MCL_CURRENT|MCL_FUTURE)</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>AllocationGuard</strong></td>
+      <td><code>engine/memory/AllocationGuard.hpp+cpp</code></td>
+      <td>Overrides all four <code>operator new</code> variants. Increments <code>g_unexpected_alloc_count</code> when <code>g_engine_running</code> is true. RAII guard for tests.</td>
+    </tr>
+    <tr>
+      <td><strong>PoolTypes</strong></td>
+      <td><code>engine/memory/PoolTypes.hpp</code></td>
+      <td>Cache-line-aligned POD structs: <code>Order</code> (64B), <code>ExecutionReport</code> (64B), <code>SignalRecord</code> (32B). All with <code>static_assert</code> size/alignment checks.</td>
+    </tr>
+    <tr>
+      <td><strong>FlatOrderMap</strong></td>
+      <td><code>engine/orderbook/FlatOrderMap.hpp</code></td>
+      <td>Pre-allocated open-addressing hash map replacing <code>std::unordered_map</code>. Storage sized at construction (2× max_orders). No runtime malloc on insert/erase.</td>
+    </tr>
+    <tr>
+      <td><strong>StartupValidator</strong></td>
+      <td><code>engine/runtime/StartupValidator.hpp+cpp</code></td>
+      <td>Pre-flight checks: pool capacity, timing monotonicity, NUMA nodes. Skips NUMA validation on WSL2 (detected via <code>/proc/version</code>).</td>
+    </tr>
+    <tr>
+      <td><strong>ThreadAffinityManager</strong></td>
+      <td><code>engine/runtime/ThreadAffinityManager.hpp+cpp</code></td>
+      <td>Pins threads to CPU cores via <code>pthread_setaffinity_np</code>. WSL2: failure is a warning. Bare-metal Linux: failure aborts startup.</td>
+    </tr>
+    <tr>
+      <td><strong>TimestampProvider</strong></td>
+      <td><code>engine/runtime/TimestampProvider.hpp+cpp</code></td>
+      <td>Abstract nanosecond clock. <code>ChronoTimestampProvider</code> (portable). <code>RdtscpTimestampProvider</code> (CPUID-detected, 100ms calibrated TSC-to-ns, fallback to chrono).</td>
+    </tr>
+    <tr>
+      <td><strong>SymbolRouter</strong></td>
+      <td><code>engine/runtime/SymbolRouter.hpp+cpp</code></td>
+      <td>Routes events to per-symbol pipelines (book + strategy + matcher). O(1) lookup via 256-slot fixed table. Symbol isolation guaranteed — no cross-contamination.</td>
+    </tr>
+    <tr>
+      <td><strong>Dashboard — Pools tab</strong></td>
+      <td><code>dashboard/frontend/src/components/PoolsView.jsx</code></td>
+      <td>New fifth tab. Startup report card (allocator, mlockall, validation). Live pool utilisation table with exhaustion count (red highlight) and bar chart.</td>
+    </tr>
+  </table>
+
+  <!-- Structural refactors -->
+  <h3>Structural Refactors for Zero-Allocation</h3>
+
+  <h4>Event struct: 40B → 64B (<code>alignas(64)</code>)</h4>
+  <table>
+    <tr><th>Field</th><th>Size</th><th>Notes</th></tr>
+    <tr><td><code>timestamp</code></td><td>8B</td><td>nanoseconds since epoch</td></tr>
+    <tr><td><code>symbol_id</code></td><td>4B</td><td></td></tr>
+    <tr><td><code>type</code></td><td>4B</td><td>EventType in low 16 bits, Side in bit 16</td></tr>
+    <tr><td><code>price</code></td><td>8B</td><td></td></tr>
+    <tr><td><code>quantity</code></td><td>8B</td><td></td></tr>
+    <tr><td><code>order_id</code></td><td>8B</td><td>upper 16 bits = participant_id</td></tr>
+    <tr><td><code>sequence</code></td><td>8B</td><td><em>New in Phase 2</em> — global sequence number</td></tr>
+    <tr><td><code>reserved</code></td><td>8B</td><td><em>New in Phase 2</em> — reserved for Phase 3</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>64B</strong></td><td>One full cache line</td></tr>
+  </table>
+
+  <h4>PriceLevel: <code>vector</code> → fixed array</h4>
+  <pre>// Before (Phase 1) — allocates on first push_back per level
+struct PriceLevel {
+    uint64_t             total_quantity{0};
+    std::vector&lt;uint64_t&gt; order_ids;
+};
+
+// After (Phase 2) — no runtime allocation
+struct PriceLevel {
+    static constexpr std::size_t MAX_ORDERS = 16;
+    uint64_t total_quantity{0};
+    std::array&lt;uint64_t, MAX_ORDERS&gt; order_ids{};
+    uint8_t count{0};
+};</pre>
+
+  <h4>MatchOutput: <code>vector</code> → fixed array</h4>
+  <pre>// Before (Phase 1)
+struct MatchOutput {
+    MatchResult        result{MatchResult::Ok};
+    std::vector&lt;Event&gt; events;  // allocates on fill
+};
+
+// After (Phase 2)
+struct MatchOutput {
+    static constexpr std::size_t MAX_EVENTS = 16;
+    MatchResult result{MatchResult::Ok};
+    std::array&lt;Event, MAX_EVENTS&gt; events{};
+    std::size_t event_count{0};
+    std::span&lt;const Event&gt; event_span() const noexcept;  // range-for compatible
+};</pre>
+
+  <h4>SPSC Queue — cache padding</h4>
+  <pre>// Phase 2: head_ and tail_ on separate cache lines
+alignas(64) std::atomic&lt;uint64_t&gt; head_{0};  // consumer's line
+alignas(64) std::atomic&lt;uint64_t&gt; tail_{0};  // producer's line
+alignas(64) std::array&lt;T, Capacity&gt; buffer_{};</pre>
+
+  <!-- Key constants -->
+  <h3>Key Capacity Constants</h3>
+  <table>
+    <tr><th>Constant</th><th>Value</th><th>Location</th></tr>
+    <tr><td><code>PriceLevel::MAX_ORDERS</code></td><td>16</td><td><code>engine/orderbook/OrderBook.hpp</code></td></tr>
+    <tr><td><code>MatchOutput::MAX_EVENTS</code></td><td>16</td><td><code>engine/matching/MatchingEngine.hpp</code></td></tr>
+    <tr><td><code>SymbolRouter::kMaxSymbols</code></td><td>256</td><td><code>engine/runtime/SymbolRouter.hpp</code></td></tr>
+    <tr><td><code>OrderBook::DEFAULT_MAX_ORDERS</code></td><td>65,536</td><td><code>engine/orderbook/OrderBook.hpp</code></td></tr>
+    <tr><td>FlatOrderMap load factor</td><td>50%</td><td><code>engine/orderbook/FlatOrderMap.hpp</code></td></tr>
+    <tr><td>SPSC cache line size</td><td>64B</td><td><code>engine/queues/SPSCQueue.hpp</code></td></tr>
+  </table>
+
+  <!-- Non-obvious engineering notes -->
+  <h3>Non-Obvious Engineering Notes</h3>
+
+  <h4>AllocationGuard — two build constraints</h4>
+  <div class="warn-box">
+    <strong>Static library problem:</strong> Linkers only extract object files from static libs when they resolve an explicit symbol reference. <code>operator new</code> replacements have no callers (they silently override the runtime), so they are silently omitted. Fix: compile <code>AllocationGuard.cpp</code> as a source file directly in the test executable.
+  </div>
+  <div class="warn-box">
+    <strong>Optimizer DCE problem:</strong> At <code>-O2</code>, Clang legally eliminates <code>new T; delete p;</code> sequences whose allocated value is never read (dead store elimination). This makes guard tests falsely show <code>count = 0</code>. Fix: <code>target_compile_options(alloc_guard_tests PRIVATE -O0)</code>.
+  </div>
+
+  <h4>SignalRecord — not StrategySignal</h4>
+  <p>The spec names the 32B pool-managed type <code>StrategySignal</code>, but that collides with <code>enum class StrategySignal</code> in <code>Strategy.hpp</code>. Renamed to <code>SignalRecord</code> to eliminate the ambiguity.</p>
+
+  <h4>WSL2 detection</h4>
+  <p>Both <code>StartupValidator</code> and <code>ThreadAffinityManager</code> detect WSL2 by scanning <code>/proc/version</code> for the string <code>"microsoft"</code>. On WSL2: NUMA validation is skipped; thread affinity failures are warnings, not fatal errors.</p>
+
+  <!-- Testing -->
+  <h3>Testing Added in Phase 2</h3>
+  <table>
+    <tr><th>Suite</th><th>Tests</th><th>Coverage</th></tr>
+    <tr><td>ObjectPool</td><td>16</td><td>Alloc/release, exhaustion counter, reuse, used+available=capacity</td></tr>
+    <tr><td>StartupAllocator</td><td>8</td><td>Pre-start state, all 4 pools allocated, mlockall toggle</td></tr>
+    <tr><td>AllocationGuard</td><td>8</td><td>Counts hot-path allocs, pool ops excluded, nothrow detection</td></tr>
+    <tr><td>PoolTypes</td><td>12</td><td>Size/alignment asserts, pool usability for each type</td></tr>
+    <tr><td>SPSCQueue (stress)</td><td>+1</td><td>10M-op concurrent stress: no corruption, no loss, no deadlock</td></tr>
+    <tr><td>Runtime</td><td>20</td><td>Validator pass/fail, affinity no-crash, timestamp monotonic, symbol routing + isolation</td></tr>
+    <tr><td>Phase2Pipeline (integration)</td><td>6</td><td>Full replay correctness, <strong>zero-alloc verification</strong>, pool exhaustion recovery, multi-symbol isolation</td></tr>
+    <tr><td><strong>Total (Phase 2)</strong></td><td><strong>+75</strong></td><td>187 total (186 passing, 1 skipped)</td></tr>
+  </table>
+
+  <!-- What is deferred -->
+  <h3>Deferred to Phase 3</h3>
+  <ul>
+    <li>Prefetching and branch minimization</li>
+    <li>SIMD optimizations</li>
+    <li>NUMA pinning and memory topology tuning</li>
+    <li>Cache miss analysis (perf / VTune)</li>
+    <li>Latency benchmarking with RDTSCP gates</li>
+    <li>Bare-metal CI performance enforcement</li>
+  </ul>
+
+</div><!-- end .page -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     APPENDIX — Tech stack & commands
+═══════════════════════════════════════════════════════════════════ -->
+<div class="page" style="page-break-before: always;">
+
+  <h3 style="margin-top:0;">Technology Stack</h3>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Version</th></tr>
+    <tr><td>Language</td><td>C++20</td><td>ISO/IEC 14882:2020</td></tr>
+    <tr><td>Compiler</td><td>Clang</td><td>21.1.8</td></tr>
+    <tr><td>Build system</td><td>CMake</td><td>4.2.3</td></tr>
+    <tr><td>Test framework</td><td>GoogleTest</td><td>v1.14.0</td></tr>
+    <tr><td>WebSocket server</td><td>uWebSockets</td><td>v20.62.0</td></tr>
+    <tr><td>JSON</td><td>nlohmann/json</td><td>v3.11.3</td></tr>
+    <tr><td>Database</td><td>PostgreSQL / libpq</td><td>18.4</td></tr>
+    <tr><td>Frontend</td><td>React + Vite + TailwindCSS</td><td>18 / 5 / 3</td></tr>
+    <tr><td>Runtime</td><td>Ubuntu 26.04 on WSL2</td><td>Windows 11</td></tr>
+  </table>
+
+  <h3>Build Commands (WSL2)</h3>
+  <pre># Configure
+cmake -S /mnt/d/Git_personal/Event-Driven-Trading-System \
+      -B ~/build/trading-engine \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++
+
+# Build all targets
+cmake --build ~/build/trading-engine -j$(nproc)
+
+# Run all tests
+ctest --test-dir ~/build/trading-engine
+
+# Sanitizer builds
+cmake -B ~/build/asan  -DSANITIZER=address   ...
+cmake -B ~/build/tsan  -DSANITIZER=thread    ...
+cmake -B ~/build/ubsan -DSANITIZER=undefined ...</pre>
+
+  <h3>Run the Dashboard</h3>
+  <pre># WSL2 terminal — C++ WebSocket server
+~/build/trading-engine/dashboard/websocket/dashboard_server
+
+# PowerShell — React frontend
+cd "d:\Git_personal\Event-Driven-Trading-System\dashboard\frontend"
+npm run dev
+# Open http://localhost:3000</pre>
+
+  <h3>Project Directory Structure</h3>
+  <pre>Event-Driven-Trading-System/
+├── engine/
+│   ├── events/          Event.hpp — 64B POD, factory helpers
+│   ├── queues/          SPSCQueue.hpp — lock-free, cache-padded
+│   ├── orderbook/       OrderBook + FlatOrderMap
+│   ├── matching/        MatchingEngine — price-time priority + STP
+│   ├── strategy/        Strategy interface + 3 built-in strategies
+│   ├── replay/          ReplayController + Sequential + Vector
+│   ├── persistence/     PostgresWriter — async libpq writer
+│   ├── memory/          ObjectPool, StartupAllocator, AllocationGuard, PoolTypes
+│   └── runtime/         StartupValidator, ThreadAffinityManager, TimestampProvider, SymbolRouter
+│
+├── dashboard/
+│   ├── websocket/       C++ uWS server + SnapshotPublisher
+│   └── frontend/        React 18 app — 5 views
+│
+├── tests/
+│   ├── unit/            112 Phase-1 + 75 Phase-2 unit tests
+│   ├── integration/     Phase-1 pipeline + Phase-2 zero-alloc tests
+│   └── fixtures/        CSV replay files
+│
+├── phase_1_instruction.md   Requirements + implementation decisions
+├── phase_2_instruction.md   Requirements + implementation decisions
+└── CMakeLists.txt</pre>
+
+  <div style="margin-top:48px; padding-top:24px; border-top:1px solid #dde4ee; text-align:center; color:#9aa5b4; font-size:9.5pt;">
+    Event-Driven Trading Engine &nbsp;·&nbsp; Phase 1 &amp; 2 Complete &nbsp;·&nbsp;
+    186/187 tests passing &nbsp;·&nbsp; 0 hot-path allocations
+  </div>
+
+</div><!-- end .page -->
+
+<div class="no-print" style="position:fixed; bottom:20px; right:20px; background:#0d2137; color:#fff; padding:10px 18px; border-radius:8px; font-size:10pt; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3);" onclick="window.print()">
+  🖨 Print / Save as PDF
+</div>
+
+</body>
+</html>

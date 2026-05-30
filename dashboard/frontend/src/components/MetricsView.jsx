@@ -71,10 +71,9 @@ export default function MetricsView({ data }) {
         )}
       </div>
 
-      {/* Phase 1 timing disclaimer */}
       <p className="text-xs text-gray-600">
-        Phase 1: latency measured with std::chrono — not suitable as authoritative latency data.
-        RDTSCP measurement begins in Phase 2.
+        Phase 2: latency covers the core matching path only (strategy dispatch + order book update).
+        Dashboard publishing overhead is excluded. RDTSCP high-resolution timing is available — see Pools tab for startup config.
       </p>
     </div>
   )

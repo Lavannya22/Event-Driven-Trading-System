@@ -35,7 +35,7 @@ TEST(MatchingEngine, EmptyBookBidBecomesResting) {
     OrderBook book(1); MatchingEngine me;
     auto out = me.process_new_order(book, new_order(P1, 1, 10000, 100, Side::Bid));
     EXPECT_EQ(out.result, MatchResult::Ok);
-    EXPECT_TRUE(out.events.empty());
+    EXPECT_TRUE(out.empty());
     EXPECT_TRUE(book.has_bid());
     EXPECT_EQ(book.best_bid(), 10000u);
 }
@@ -44,7 +44,7 @@ TEST(MatchingEngine, EmptyBookAskBecomesResting) {
     OrderBook book(1); MatchingEngine me;
     auto out = me.process_new_order(book, new_order(P1, 1, 10050, 50, Side::Ask));
     EXPECT_EQ(out.result, MatchResult::Ok);
-    EXPECT_TRUE(out.events.empty());
+    EXPECT_TRUE(out.empty());
     EXPECT_TRUE(book.has_ask());
     EXPECT_EQ(book.best_ask(), 10050u);
 }
@@ -58,7 +58,7 @@ TEST(MatchingEngine, BidBelowBestAskBecomesResting) {
     rest(book, me, P2, 1, 10050, 100, Side::Ask);
     auto out = me.process_new_order(book, new_order(P1, 2, 9999, 100, Side::Bid));
     EXPECT_EQ(out.result, MatchResult::Ok);
-    EXPECT_TRUE(out.events.empty());
+    EXPECT_TRUE(out.empty());
     EXPECT_EQ(book.best_bid(), 9999u);
     EXPECT_EQ(book.best_ask(), 10050u);
 }
@@ -68,7 +68,7 @@ TEST(MatchingEngine, AskAboveBestBidBecomesResting) {
     rest(book, me, P2, 1, 10000, 100, Side::Bid);
     auto out = me.process_new_order(book, new_order(P1, 2, 10051, 50, Side::Ask));
     EXPECT_EQ(out.result, MatchResult::Ok);
-    EXPECT_TRUE(out.events.empty());
+    EXPECT_TRUE(out.empty());
     EXPECT_EQ(book.best_bid(), 10000u);
     EXPECT_EQ(book.best_ask(), 10051u);
 }
@@ -84,7 +84,7 @@ TEST(MatchingEngine, FullFillBidAggressor) {
     auto out = me.process_new_order(book, new_order(P1, 2, 10050, 100, Side::Bid));
 
     ASSERT_EQ(out.result, MatchResult::Ok);
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(event_type(out.events[0]), EventType::TradeExecution);
     EXPECT_EQ(out.events[0].price,    10050u);
     EXPECT_EQ(out.events[0].quantity, 100u);
@@ -100,7 +100,7 @@ TEST(MatchingEngine, FullFillAskAggressor) {
     auto out = me.process_new_order(book, new_order(P1, 2, 10000, 100, Side::Ask));
 
     ASSERT_EQ(out.result, MatchResult::Ok);
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(event_type(out.events[0]), EventType::TradeExecution);
     EXPECT_EQ(out.events[0].price,    10000u);
     EXPECT_EQ(out.events[0].quantity, 100u);
@@ -116,7 +116,7 @@ TEST(MatchingEngine, FillPriceIsRestingPrice) {
     // Aggressor bid at 10100 — crosses the 10050 ask.
     auto out = me.process_new_order(book, new_order(P1, 2, 10100, 100, Side::Bid));
 
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(out.events[0].price, 10050u);  // passive (resting) price
 }
 
@@ -132,7 +132,7 @@ TEST(MatchingEngine, AggressorPartialFillRemainsResting) {
     auto out = me.process_new_order(book, new_order(P1, 2, 10050, 100, Side::Bid));
 
     ASSERT_EQ(out.result, MatchResult::Ok);
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(out.events[0].quantity, 60u);  // only 60 filled
 
     // Remaining 40 of aggressor should be resting
@@ -148,7 +148,7 @@ TEST(MatchingEngine, RestingPartialFillRemainsInBook) {
     // Aggressor bid qty=50
     auto out = me.process_new_order(book, new_order(P1, 2, 10050, 50, Side::Bid));
 
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(out.events[0].quantity, 50u);
     EXPECT_EQ(book.quantity_at(10050, Side::Ask), 150u);  // 200 - 50
     EXPECT_FALSE(book.has_bid());
@@ -167,7 +167,7 @@ TEST(MatchingEngine, BidClearsMultiplePriceLevels) {
     auto out = me.process_new_order(book, new_order(P1, 3, 10060, 100, Side::Bid));
 
     ASSERT_EQ(out.result, MatchResult::Ok);
-    ASSERT_EQ(out.events.size(), 2u);
+    ASSERT_EQ(out.event_count, 2u);
     EXPECT_EQ(out.events[0].price, 10050u);  // best ask filled first
     EXPECT_EQ(out.events[1].price, 10060u);
     EXPECT_FALSE(book.has_ask());
@@ -183,7 +183,7 @@ TEST(MatchingEngine, FIFOWithinSameLevel) {
     // Aggressor fills only the first order fully and second partially
     auto out = me.process_new_order(book, new_order(P1, 3, 10050, 50, Side::Bid));
 
-    ASSERT_EQ(out.events.size(), 2u);
+    ASSERT_EQ(out.event_count, 2u);
     EXPECT_EQ(out.events[0].quantity, 40u);  // first resting order filled first
     EXPECT_EQ(out.events[1].quantity, 10u);  // second resting order partially filled
     EXPECT_EQ(book.quantity_at(10050, Side::Ask), 30u);  // 40-10 remains
@@ -202,7 +202,7 @@ TEST(MatchingEngine, STPCancelsAggressor) {
     auto out = me.process_new_order(book, new_order(P1, 2, 10050, 100, Side::Bid));
 
     EXPECT_EQ(out.result, MatchResult::STPTriggered);
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(event_type(out.events[0]), EventType::CancelOrder);
     EXPECT_EQ(out.events[0].order_id, make_order_id(P1, 2));  // aggressor cancelled
 
@@ -224,11 +224,11 @@ TEST(MatchingEngine, STPAfterPartialFillsCancelsRemainder) {
 
     EXPECT_EQ(out.result, MatchResult::STPTriggered);
     // First event: fill of 50 against P2
-    ASSERT_GE(out.events.size(), 2u);
+    ASSERT_GE(out.event_count, 2u);
     EXPECT_EQ(event_type(out.events[0]), EventType::TradeExecution);
     EXPECT_EQ(out.events[0].quantity, 50u);
     // Last event: STP cancel of aggressor
-    EXPECT_EQ(event_type(out.events.back()), EventType::CancelOrder);
+    EXPECT_EQ(event_type(out.events[out.event_count - 1]), EventType::CancelOrder);
 
     // P1 resting ask still in book (not consumed)
     EXPECT_EQ(book.quantity_at(10050, Side::Ask), 100u);
@@ -243,7 +243,7 @@ TEST(MatchingEngine, AnonymousOrdersNoSTP) {
     auto out = me.process_new_order(book, new_order(P0, 2, 10050, 100, Side::Bid));
 
     EXPECT_EQ(out.result, MatchResult::Ok);
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     EXPECT_EQ(event_type(out.events[0]), EventType::TradeExecution);
 }
 
@@ -253,7 +253,7 @@ TEST(MatchingEngine, DifferentParticipantsNoSTP) {
     auto out = me.process_new_order(book, new_order(P1, 2, 10050, 100, Side::Bid));
 
     EXPECT_EQ(out.result, MatchResult::Ok);
-    EXPECT_EQ(out.events.size(), 1u);
+    EXPECT_EQ(out.event_count, 1u);
     EXPECT_EQ(event_type(out.events[0]), EventType::TradeExecution);
 }
 
@@ -303,7 +303,7 @@ TEST(MatchingEngine, ExecutionEventHasCorrectFields) {
     Event agg = make_new_order(9999, 1, agg_id, 10050, 100, Side::Bid);
     auto out = me.process_new_order(book, agg);
 
-    ASSERT_EQ(out.events.size(), 1u);
+    ASSERT_EQ(out.event_count, 1u);
     const Event& exec = out.events[0];
     EXPECT_EQ(event_type(exec), EventType::TradeExecution);
     EXPECT_EQ(exec.symbol_id, 1u);

@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
             auto etype = event_type(event);
             if (etype == EventType::NewOrder) {
                 auto out = matcher.process_new_order(book, event);
-                for (auto& e : out.events) {
+                for (auto& e : out.event_span()) {
                     if (event_type(e) == EventType::TradeExecution)
                         publisher.push_trade(e);
                 }

@@ -1,5 +1,6 @@
 #include "engine/matching/MatchingEngine.hpp"
 #include <algorithm>
+#include <array>
 
 namespace trading {
 
@@ -16,7 +17,6 @@ MatchOutput MatchingEngine::process_new_order(OrderBook& book, const Event& aggr
     uint64_t remaining_qty = aggressor.quantity;
 
     while (remaining_qty > 0) {
-        // Check whether the best opposite-side price crosses the aggressor's limit.
         if (agg_side == Side::Bid) {
             if (!book.has_ask() || book.best_ask() > agg_price) break;
         } else {
@@ -27,28 +27,29 @@ MatchOutput MatchingEngine::process_new_order(OrderBook& book, const Event& aggr
                                         ? book.best_ask()
                                         : book.best_bid();
 
-        // Snapshot FIFO order list to avoid invalidation while we reduce orders.
-        const std::vector<uint64_t> level_ids =
-            book.order_ids_at(match_price, opp_side);
+        // Snapshot order IDs to a stack array — no heap allocation.
+        std::array<uint64_t, OrderBook::MAX_ORDERS_PER_LEVEL> snap{};
+        std::size_t snap_count = 0;
+        for (uint64_t id : book.order_ids_at(match_price, opp_side))
+            if (snap_count < snap.size()) snap[snap_count++] = id;
 
         bool stp_hit = false;
-        for (uint64_t resting_id : level_ids) {
+        for (std::size_t i = 0; i < snap_count; ++i) {
             if (remaining_qty == 0) break;
 
+            const uint64_t resting_id = snap[i];
             const OrderEntry* resting = book.find_order(resting_id);
-            if (!resting) continue;  // fully consumed earlier in this loop
+            if (!resting) continue;
 
-            // Self-trade prevention — cancel aggressor for its remaining quantity.
             if (is_self_trade(agg_id, resting_id)) {
-                out.events.push_back(make_cancel_order(ts, sym, agg_id));
+                out.push(make_cancel_order(ts, sym, agg_id));
                 out.result = MatchResult::STPTriggered;
                 stp_hit = true;
                 break;
             }
 
             const uint64_t fill_qty = std::min(remaining_qty, resting->quantity);
-            out.events.push_back(
-                make_trade_execution(ts, sym, agg_id, match_price, fill_qty));
+            out.push(make_trade_execution(ts, sym, agg_id, match_price, fill_qty));
             book.reduce(resting_id, fill_qty);
             remaining_qty -= fill_qty;
         }
@@ -56,7 +57,6 @@ MatchOutput MatchingEngine::process_new_order(OrderBook& book, const Event& aggr
         if (stp_hit) return out;
     }
 
-    // Insert any unfilled remainder as a new resting order.
     if (remaining_qty > 0) {
         const OrderEntry entry{agg_id, agg_price, remaining_qty, ts, agg_side};
         if (book.insert(entry) != OrderBookResult::Ok)

@@ -166,3 +166,46 @@ TEST(SPSCQueue, ConcurrentEventPipeline) {
     const uint64_t expected = static_cast<uint64_t>(N) * (N + 1) / 2;
     EXPECT_EQ(total_price.load(), expected);
 }
+
+// ---------------------------------------------------------------------------
+// Phase 2: 10M-operation stress test
+// Verifies: no corruption, no lost messages, no deadlocks under sustained load.
+// ---------------------------------------------------------------------------
+
+TEST(SPSCQueue, StressTenMillionOps) {
+    constexpr uint64_t N = 10'000'000;
+    // 4096-slot queue: small enough to force many wrap-arounds, large enough
+    // to keep producer and consumer from blocking each other constantly.
+    SPSCQueue<uint64_t, 4096> q;
+
+    uint64_t checksum_produced = 0;
+    uint64_t checksum_consumed = 0;
+
+    std::thread producer([&] {
+        for (uint64_t i = 1; i <= N; ++i) {
+            while (!q.enqueue(i)) { /* spin until space available */ }
+            checksum_produced += i;
+        }
+    });
+
+    std::thread consumer([&] {
+        uint64_t val;
+        uint64_t count = 0;
+        while (count < N) {
+            if (q.dequeue(val)) {
+                checksum_consumed += val;
+                ++count;
+            }
+        }
+    });
+
+    producer.join();
+    consumer.join();
+
+    // Verify no messages lost and no corruption: both checksums must match.
+    EXPECT_EQ(checksum_produced, checksum_consumed);
+    // Sanity: sum of 1..N = N*(N+1)/2
+    EXPECT_EQ(checksum_consumed, N * (N + 1) / 2);
+    // Queue must be empty after all messages are consumed.
+    EXPECT_TRUE(q.empty());
+}

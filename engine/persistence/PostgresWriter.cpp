@@ -11,7 +11,6 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <memory>
 #include <mutex>
 #include <queue>
 #include <random>
@@ -50,7 +49,7 @@ struct Cmd {
     uint64_t    quantity{0};
     uint8_t     side{0};
     uint64_t    event_count{0}; // EndRun
-    std::shared_ptr<std::atomic_bool> flush_done; // Flush acknowledgement
+    std::atomic<bool>* flush_done{nullptr}; // Flush acknowledgement — raw ptr safe: flush() spin-waits
 };
 
 // ── Impl ──────────────────────────────────────────────────────────────────────
@@ -220,12 +219,12 @@ void PostgresWriter::write_trade(const Event& e, const std::string& run_id) {
 }
 
 void PostgresWriter::flush() {
-    auto done = std::make_shared<std::atomic_bool>(false);
+    std::atomic<bool> done{false};
     Cmd cmd;
     cmd.kind       = Cmd::Kind::Flush;
-    cmd.flush_done = done;
+    cmd.flush_done = &done;  // safe: flush() blocks until writer signals
     impl_->enqueue(std::move(cmd));
-    while (!done->load(std::memory_order_acquire))
+    while (!done.load(std::memory_order_acquire))
         std::this_thread::sleep_for(std::chrono::microseconds(200));
 }
 

@@ -10,7 +10,13 @@ namespace trading {
 
 // Single-producer single-consumer lock-free ring buffer.
 // Capacity must be a power of two. T must be trivially copyable.
-// Phase 1: correct acquire/release ordering. Cache padding deferred to Phase 2.
+//
+// Memory ordering: acquire/release only — seq_cst is forbidden.
+//   producer: tail_.load(relaxed), head_.load(acquire), tail_.store(release)
+//   consumer: head_.load(relaxed), tail_.load(acquire), head_.store(release)
+//
+// Cache padding: head_ and tail_ are on separate cache lines to prevent
+// false sharing between the producer and consumer threads.
 template<typename T, std::size_t Capacity>
 class SPSCQueue {
     static_assert((Capacity & (Capacity - 1)) == 0,
@@ -20,11 +26,12 @@ class SPSCQueue {
     static_assert(Capacity >= 2,
                   "Capacity must be at least 2");
 
-    static constexpr std::size_t MASK = Capacity - 1;
+    static constexpr std::size_t MASK       = Capacity - 1;
+    static constexpr std::size_t kCacheLine = 64;
 
-    std::atomic<uint64_t> head_{0};  // owned by consumer
-    std::atomic<uint64_t> tail_{0};  // owned by producer
-    std::array<T, Capacity> buffer_{};
+    alignas(kCacheLine) std::atomic<uint64_t> head_{0};  // written by consumer
+    alignas(kCacheLine) std::atomic<uint64_t> tail_{0};  // written by producer
+    alignas(kCacheLine) std::array<T, Capacity> buffer_{};
 
 public:
     SPSCQueue() = default;
