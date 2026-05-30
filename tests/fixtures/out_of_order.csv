@@ -1,0 +1,6 @@
+# out_of_order.csv — fixture with out-of-order timestamps
+# Used to verify detection without crashing
+1000000,1,1,10050,100,1001,1
+1000200,1,1,10060,50,1002,1
+1000100,1,1,9950,100,1003,0
+1000400,1,2,0,0,1002,0

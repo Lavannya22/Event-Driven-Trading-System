@@ -1,0 +1,8 @@
+# integration_cross.csv — deterministic fixture that produces exactly 2 TradeExecution events.
+# timestamp,symbol_id,event_type,price,quantity,order_id,side
+# event_type: 1=NewOrder 2=CancelOrder 3=ModifyOrder
+# side: 0=Bid 1=Ask
+1000,1,1,10050,100,2001,1
+1001,1,1,9950,100,2002,0
+2000,1,1,10050,50,2003,0
+2001,1,1,10060,100,2004,0

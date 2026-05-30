@@ -1,0 +1,11 @@
+build/
+build-asan/
+build-tsan/
+build-ubsan/
+.cache/
+compile_commands.json
+*.o
+*.a
+*.so
+node_modules/
+dashboard/frontend/dist/
