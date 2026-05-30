@@ -1,0 +1,12 @@
+{
+  "name": "small",
+  "dataset": "small.csv",
+  "baseline_set_at": "2026-05-30T17:52:47Z",
+  "note": "WSL2/NTFS informational baseline. Re-run on bare-metal Linux and update via scripts/update_baseline.sh for authoritative gate.",
+  "throughput": 1071380,
+  "p50": 11,
+  "p95": 23,
+  "p99": 47,
+  "p999": 383,
+  "max": 46219
+}

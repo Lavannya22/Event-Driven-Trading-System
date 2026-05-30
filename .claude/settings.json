@@ -10,7 +10,10 @@
       "PowerShell(wsl -d Ubuntu -- sh -c \"ctest --test-dir ~/build/trading-engine -R 'ZeroUnexpected' --output-on-failure 2>&1\")",
       "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | grep -E 'error:|Linking|Built target' | grep -v '_deps' | head -30\")",
       "PowerShell(wsl -d Ubuntu -- sh -c \"ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -14\")",
-      "PowerShell(wsl -d Ubuntu -- sh -c \"python3 -m pip install fpdf2 --quiet 2>&1 | tail -3\")"
+      "PowerShell(wsl -d Ubuntu -- sh -c \"python3 -m pip install fpdf2 --quiet 2>&1 | tail -3\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -12\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"~/build/trading-engine/benchmarks/gen_datasets /mnt/d/Git_personal/Event-Driven-Trading-System/benchmarks/datasets && ~/build/trading-engine/benchmarks/run_benchmark small\")",
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | tail -6 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -8\")"
     ]
   }
 }

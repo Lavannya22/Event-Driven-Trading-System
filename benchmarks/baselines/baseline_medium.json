@@ -1,0 +1,11 @@
+{
+  "name": "medium",
+  "dataset": "medium.csv",
+  "note": "Initial baseline — update after first authoritative bare-metal run via scripts/update_baseline.sh",
+  "throughput": 0,
+  "p50": 0,
+  "p95": 0,
+  "p99": 0,
+  "p999": 0,
+  "max": 0
+}

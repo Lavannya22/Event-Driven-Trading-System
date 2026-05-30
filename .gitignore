@@ -9,3 +9,10 @@ compile_commands.json
 *.so
 node_modules/
 dashboard/frontend/dist/
+
+# Generated benchmark datasets (recreate with: ./gen_datasets <dir>)
+benchmarks/datasets/*.csv
+benchmarks/datasets/*.bin
+
+# Generated benchmark reports (per-run outputs)
+benchmarks/reports/

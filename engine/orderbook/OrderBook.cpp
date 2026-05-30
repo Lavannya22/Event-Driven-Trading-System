@@ -3,10 +3,11 @@
 
 namespace trading {
 
-OrderBook::OrderBook(uint32_t symbol_id, std::size_t max_orders)
+OrderBook::OrderBook(uint32_t symbol_id, std::size_t max_orders, uint32_t tick_shift)
     : symbol_id_(symbol_id)
-    , bid_levels_(NUM_LEVELS)
-    , ask_levels_(NUM_LEVELS)
+    , tick_shift_(tick_shift)
+    , bid_levels_(NUM_LEVELS >> tick_shift)
+    , ask_levels_(NUM_LEVELS >> tick_shift)
     , orders_(max_orders * 2)   // 2× capacity for 50% load factor
 {}
 
@@ -150,8 +151,11 @@ bool OrderBook::price_in_range(uint64_t price) const noexcept {
     return price >= MIN_PRICE && price <= MAX_PRICE;
 }
 
+// Phase 3: bit-shift replaces division — no div/idiv instruction generated.
+// tick_shift=0 → index = price - MIN_PRICE  (tick size = 1, every price valid)
+// tick_shift=N → index = (price - MIN_PRICE) >> N  (tick size = 2^N)
 std::size_t OrderBook::price_index(uint64_t price) const noexcept {
-    return static_cast<std::size_t>(price - MIN_PRICE);
+    return static_cast<std::size_t>((price - MIN_PRICE) >> tick_shift_);
 }
 
 PriceLevel& OrderBook::level(uint64_t price, Side side) noexcept {

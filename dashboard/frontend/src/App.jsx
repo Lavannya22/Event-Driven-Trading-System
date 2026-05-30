@@ -4,9 +4,11 @@ import OrderBookView from './components/OrderBookView'
 import TradesView    from './components/TradesView'
 import ReplayView    from './components/ReplayView'
 import MetricsView   from './components/MetricsView'
-import PoolsView     from './components/PoolsView'
+import PoolsView        from './components/PoolsView'
+import PerformanceView  from './components/PerformanceView'
+import BenchmarkView    from './components/BenchmarkView'
 
-const TABS = ['Order Book', 'Trades', 'Replay', 'Metrics', 'Pools']
+const TABS = ['Order Book', 'Trades', 'Replay', 'Metrics', 'Pools', 'Performance', 'Benchmark']
 
 export default function App() {
   const [tab, setTab]     = useState(0)
@@ -53,7 +55,9 @@ export default function App() {
         {data && tab === 1 && <TradesView    data={data.trades}    />}
         {data && tab === 2 && <ReplayView    data={data.replay}    />}
         {data && tab === 3 && <MetricsView   data={data.metrics}   />}
-        {data && tab === 4 && <PoolsView     pools={data.pools ?? []} startup={data.startup ?? {}} />}
+        {data && tab === 4 && <PoolsView       pools={data.pools ?? []} startup={data.startup ?? {}} />}
+        {data && tab === 5 && <PerformanceView metrics={data.metrics ?? {}} benchmark={data.benchmark ?? {}} />}
+        {data && tab === 6 && <BenchmarkView   lastReport={data.benchmark ?? null} />}
       </main>
 
       {/* Footer: last snapshot timestamp */}

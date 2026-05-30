@@ -9,6 +9,7 @@ add_executable(unit_tests
     test_startup_allocator.cpp
     test_pool_types.cpp
     test_runtime.cpp
+    test_benchmark.cpp
 )
 
 target_compile_definitions(unit_tests PRIVATE
@@ -17,6 +18,7 @@ target_compile_definitions(unit_tests PRIVATE
 
 target_link_libraries(unit_tests
     PRIVATE engine
+    PRIVATE benchmark_lib
     PRIVATE GTest::gtest_main
 )
 

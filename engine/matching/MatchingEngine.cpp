@@ -37,6 +37,12 @@ MatchOutput MatchingEngine::process_new_order(OrderBook& book, const Event& aggr
         for (std::size_t i = 0; i < snap_count; ++i) {
             if (remaining_qty == 0) break;
 
+            // Phase 3: prefetch next order entry 1 iteration ahead.
+            if (i + 1 < snap_count) {
+                const OrderEntry* next = book.find_order(snap[i + 1]);
+                if (next) __builtin_prefetch(next, 0, 1);
+            }
+
             const uint64_t resting_id = snap[i];
             const OrderEntry* resting = book.find_order(resting_id);
             if (!resting) continue;

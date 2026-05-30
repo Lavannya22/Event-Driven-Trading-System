@@ -66,6 +66,9 @@ struct DepthEntry {
 // Phase 2: allocation-free hot path.
 //   - PriceLevel uses a fixed inline array (no per-level vector)
 //   - Order lookup uses FlatOrderMap (pre-allocated at construction)
+// Phase 3: shift-based price indexing.
+//   - price_index uses >> tick_shift instead of division
+//   - Division is forbidden in the hot path (no div/idiv instructions)
 class OrderBook {
 public:
     static constexpr uint64_t MIN_PRICE          = 1;
@@ -74,8 +77,12 @@ public:
     static constexpr std::size_t MAX_ORDERS_PER_LEVEL = PriceLevel::MAX_ORDERS;
     static constexpr std::size_t DEFAULT_MAX_ORDERS   = 65536;
 
+    // tick_shift: price index = (price - base_price) >> tick_shift.
+    // tick_shift=0 means tick_size=1 (every integer price is a valid level).
+    // tick_shift=2 means tick_size=4 (only multiples of 4 are valid levels).
     explicit OrderBook(uint32_t symbol_id,
-                       std::size_t max_orders = DEFAULT_MAX_ORDERS);
+                       std::size_t max_orders = DEFAULT_MAX_ORDERS,
+                       uint32_t tick_shift    = 0);
 
     OrderBookResult insert(const OrderEntry& order);
     OrderBookResult cancel(uint64_t order_id);
@@ -114,6 +121,7 @@ private:
     void update_best_ask_from(uint64_t price) noexcept;
 
     uint32_t symbol_id_;
+    uint32_t tick_shift_{0};   // Phase 3: shift replacing division in price_index()
 
     std::vector<PriceLevel>           bid_levels_;
     std::vector<PriceLevel>           ask_levels_;
