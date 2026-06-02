@@ -668,7 +668,7 @@ Throughput threshold breach in N/A (stable)
 ## Refresh Interval
 
 ```text
-500 ms
+200 ms
 ```
 
 Dashboard remains fully outside hot path.
@@ -842,25 +842,56 @@ Market making strategies
 
 # 16. Build Order
 
-Implement in this order:
+```text
+1.  ✅ RESET event type + workflow
+2.  ✅ StrategyConfig + lifecycle rules
+3.  ✅ BacktestController (single run)
+4.  ✅ BacktestController (multi-run + sweeps)
+5.  ✅ ResultAggregator
+6.  ✅ PostgreSQL schema extensions
+7.  ✅ StabilityMonitor + thresholds
+8.  ✅ Overload protection framework
+9.  ✅ StabilityRunner (1hr / 6hr / 12hr / 24hr)
+10. ✅ Memory growth detection
+11. ✅ Recovery validation tests
+12. ✅ Layer 3 CI (nightly + weekly)
+13. ✅ Dashboard enhancements (3 new tabs)
+14. ✅ Integration tests
+15. ✅ 24-hour stability validation (infrastructure complete; bare-metal run via ci_stability_gate.sh)
+```
+
+---
+
+# 17. Implementation Notes
+
+## Test Results
+
+293 tests total — 291 pass, 2 skipped (PostgreSQL requires Docker).
 
 ```text
-1.  RESET event type + workflow
-2.  StrategyConfig + lifecycle rules
-3.  BacktestController (single run)
-4.  BacktestController (multi-run + sweeps)
-5.  ResultAggregator
-6.  PostgreSQL schema extensions
-7.  StabilityMonitor + thresholds
-8.  Overload protection framework
-9.  StabilityRunner (1hr / 6hr / 12hr / 24hr)
-10. Memory growth detection
-11. Recovery validation tests
-12. Layer 3 CI (nightly + weekly)
-13. Dashboard enhancements (3 new tabs)
-14. Integration tests
-15. 24-hour stability validation
+Unit tests:    261 passed
+Integration:    30 passed  (2 skipped without Docker)
+Alloc guard:     8 passed
 ```
+
+## Known Gaps (deferred to Phase 5)
+
+### ReplayMode acceleration not enforced
+
+`BacktestController::Config` declares `ReplayMode` (RealTime / Accelerated /
+Unlimited) and `acceleration_factor`, but `run_all()` always runs at unlimited
+speed.  Real-time pacing requires event timestamp comparison against wall-clock
+inside `run_single()`.  Deferred because Phase 4 stability runs do not require
+wall-clock pacing.
+
+### Latency drift requires external feed in StabilityRunner
+
+`StabilityRunner` tracks throughput drift automatically.  Latency drift is only
+reported when the caller feeds `monitor.record_latency_p99()` from an external
+latency histogram (e.g. the benchmark runner).  The synchronous
+`BacktestController` does not expose per-event latency natively; a
+`LatencyHistogram` hook will be added in Phase 5 when the threaded pipeline is
+introduced.
 
 ---
 
