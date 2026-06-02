@@ -12,6 +12,7 @@ enum class EventType : uint32_t {
     ModifyOrder    = 3,
     MarketUpdate   = 4,
     TradeExecution = 5,
+    RESET          = 6,  // Phase 4: resets engine state through the event pipeline
 };
 
 enum class Side : uint8_t {
@@ -113,6 +114,17 @@ inline Event make_trade_execution(uint64_t timestamp, uint32_t symbol_id,
     e.price     = price;
     e.quantity  = quantity;
     e.order_id  = order_id;
+    return e;
+}
+
+// Phase 4: inject a RESET event into the pipeline.
+// The BacktestController handles this event by draining queues and
+// resetting engine state before starting the next run.
+inline Event make_reset_event(uint64_t timestamp, uint32_t symbol_id = 0) noexcept {
+    Event e{};
+    e.timestamp = timestamp;
+    e.symbol_id = symbol_id;
+    e.type      = encode_type(EventType::RESET);
     return e;
 }
 

@@ -90,6 +90,16 @@ public:
         return false;
     }
 
+    // Phase 4: clear all entries — no allocation, O(capacity).
+    // Called during RESET workflow; only occupied/tombstone slots are touched.
+    void clear() noexcept {
+        for (auto& slot : table_) {
+            if (slot.key != EMPTY_KEY)
+                slot.key = EMPTY_KEY;
+        }
+        count_ = 0;
+    }
+
     std::size_t size()     const noexcept { return count_; }
     std::size_t capacity() const noexcept { return cap_; }
 };

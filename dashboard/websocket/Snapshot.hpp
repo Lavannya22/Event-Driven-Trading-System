@@ -63,15 +63,71 @@ struct StartupMetrics {
     bool        validation_passed{false};
 };
 
+// ── Phase 4 snapshot structs ──────────────────────────────────────────────────
+
+struct RunResultSummary {
+    uint32_t run_number{0};
+    uint32_t window_size{0};
+    double   threshold{0.0};
+    uint64_t total_trades{0};
+    double   realized_pnl{0.0};
+    double   sharpe_ratio{0.0};
+    double   win_rate{0.0};
+    double   max_drawdown{0.0};
+};
+
+struct BacktestSnapshot {
+    std::vector<RunResultSummary> results;
+    bool     running{false};
+    uint32_t current_run{0};
+    uint32_t total_runs{0};
+};
+
+struct StabilitySnapshot {
+    double      latency_drift_pct{0.0};
+    double      throughput_drift_pct{0.0};
+    std::size_t memory_current_mb{0};
+    std::size_t memory_peak_mb{0};
+    double      memory_growth_rate_mb_h{0.0};
+    double      projected_24h_growth_mb{0.0};
+    double      queue_depth_pct{0.0};
+    std::size_t pool_exhaustions{0};
+    uint64_t    queue_rejections{0};
+    uint64_t    persistence_overflows{0};
+    bool        is_stable{true};
+    // Projected hours until threshold breach; -1.0 = stable / not projected
+    double      latency_breach_hours{-1.0};
+    double      throughput_breach_hours{-1.0};
+    double      memory_breach_hours{-1.0};
+};
+
+struct CILayerStatus {
+    std::string state{"unknown"};  // "unknown" | "passing" | "failing"
+    std::string last_run;
+    std::string last_failure;
+};
+
+struct CISnapshot {
+    CILayerStatus layer1;
+    CILayerStatus layer2;
+    CILayerStatus layer3;
+};
+
+// ── EngineSnapshot ────────────────────────────────────────────────────────────
+
 struct EngineSnapshot {
     static constexpr int       MAX_TRADES = 50;
     OrderBookSnapshot          orderbook;
     std::deque<TradeEvent>     recent_trades;
     ReplayStats                replay;
     Metrics                    metrics;
-    std::vector<PoolMetrics>   pools;      // live pool utilisation
-    StartupMetrics             startup;    // one-time startup report
-    uint64_t                   snapshot_ts{0};  // wall-clock ms
+    std::vector<PoolMetrics>   pools;
+    StartupMetrics             startup;
+    // Phase 4
+    BacktestSnapshot           backtest;
+    StabilitySnapshot          stability;
+    CISnapshot                 ci;
+    uint64_t                   snapshot_ts{0};
 };
 
 } // namespace trading::dashboard

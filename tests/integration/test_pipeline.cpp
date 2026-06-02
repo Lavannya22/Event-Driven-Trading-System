@@ -242,6 +242,7 @@ TEST(Pipeline, ModifyOfFilledOrderIgnored) {
 #ifdef WITH_POSTGRES
 TEST(PostgresPersistence, WritesTradeToDatabase) {
     PostgresWriter writer;
+    writer.flush();  // wait for writer thread to attempt connection
     if (!writer.connected()) {
         GTEST_SKIP() << "PostgreSQL not reachable — skipping persistence test "
                         "(run: docker compose up -d)";

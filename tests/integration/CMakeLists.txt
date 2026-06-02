@@ -1,6 +1,7 @@
 add_executable(integration_tests
     test_pipeline.cpp
     test_phase2_pipeline.cpp
+    test_phase4_backtest.cpp
     ${CMAKE_SOURCE_DIR}/engine/memory/AllocationGuard.cpp
 )
 

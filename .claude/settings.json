@@ -13,7 +13,28 @@
       "PowerShell(wsl -d Ubuntu -- sh -c \"python3 -m pip install fpdf2 --quiet 2>&1 | tail -3\")",
       "PowerShell(wsl -d Ubuntu -- sh -c \"ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -12\")",
       "PowerShell(wsl -d Ubuntu -- sh -c \"~/build/trading-engine/benchmarks/gen_datasets /mnt/d/Git_personal/Event-Driven-Trading-System/benchmarks/datasets && ~/build/trading-engine/benchmarks/run_benchmark small\")",
-      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | tail -6 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -8\")"
+      "PowerShell(wsl -d Ubuntu -- sh -c \"cmake --build ~/build/trading-engine -j4 2>&1 | tail -6 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -8\")",
+      "PowerShell(wsl -- bash -c \"cmake -S /mnt/d/Git_personal/Event-Driven-Trading-System -B ~/build/trading-engine -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 2>&1\")",
+      "PowerShell(wsl cmake -S /mnt/d/Git_personal/Event-Driven-Trading-System -B ~/build/trading-engine -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 2>&1)",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"rm -rf ~/build/trading-engine && cmake -S /mnt/d/Git_personal/Event-Driven-Trading-System -B ~/build/trading-engine -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -G Ninja 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ctest --test-dir ~/build/trading-engine --output-on-failure -j4 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -30\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ctest --test-dir ~/build/trading-engine --rerun-failed --output-on-failure 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"cmake --build ~/build/trading-engine --target unit_tests -j4 2>&1 | tail -5\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -20\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"cd /mnt/d/Git_personal/Event-Driven-Trading-System && docker compose up -d 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"nc -zv localhost 5432 2>&1 || echo 'port closed'; nc -zv 172.17.0.1 5432 2>&1 || echo 'docker bridge closed'\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"cat /etc/hosts | grep -E 'host.docker|windows' ; ip route | grep default 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"timeout 3 bash -c 'echo >/dev/tcp/172.29.48.1/5432' 2>&1 && echo 'port open on Windows host' || echo 'port not reachable'\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"which socat 2>/dev/null || apt-get install -y socat 2>&1 | tail -3\")",
+      "PowerShell(wsl -d Ubuntu -u root -e sh -c \"apt-get install -y socat 2>&1 | tail -3\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"psql 'postgresql://trading:trading@localhost:5432/trading' -c '\\\\dt' 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"pg_isready -h localhost -p 5432 -U trading 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -u root -e sh -c \"apt-get install -y postgresql-client 2>&1 | tail -2 && psql 'postgresql://trading:trading@localhost:5432/trading' -c 'SELECT version\\(\\);' 2>&1\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"cmake --build ~/build/trading-engine --target integration_tests -j4 2>&1 | tail -3\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"cmake --build ~/build/trading-engine --target integration_tests -j4 2>&1 | tail -3 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -15\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"sleep 2 && cat /tmp/dashboard.log 2>&1\")",
+      "PowerShell(Start-Process \"http://localhost:3000\")"
     ]
   }
 }

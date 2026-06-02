@@ -98,6 +98,10 @@ public:
         return (has_bid() && has_ask()) ? best_ask_ - best_bid_ : 0;
     }
 
+    // Phase 4: reset all book state — no allocation, no thread restarts.
+    // Called as part of the RESET event workflow between backtest runs.
+    void reset() noexcept;
+
     uint64_t quantity_at(uint64_t price, Side side) const noexcept;
 
     // Returns a span of order IDs at a price level in FIFO order.

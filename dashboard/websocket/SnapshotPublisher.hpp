@@ -100,6 +100,35 @@ public:
         add("signal",    alloc.signal_pool());
     }
 
+    // ── Phase 4 update methods ────────────────────────────────────────────
+
+    void update_backtest(const BacktestSnapshot& bt) {
+        std::lock_guard lock(mu_);
+        snap_.backtest = bt;
+    }
+
+    void push_backtest_result(const RunResultSummary& r) {
+        std::lock_guard lock(mu_);
+        snap_.backtest.results.push_back(r);
+        snap_.backtest.current_run = r.run_number;
+    }
+
+    void set_backtest_running(bool running, uint32_t total_runs) {
+        std::lock_guard lock(mu_);
+        snap_.backtest.running    = running;
+        snap_.backtest.total_runs = total_runs;
+    }
+
+    void update_stability(const StabilitySnapshot& s) {
+        std::lock_guard lock(mu_);
+        snap_.stability = s;
+    }
+
+    void update_ci(const CISnapshot& ci) {
+        std::lock_guard lock(mu_);
+        snap_.ci = ci;
+    }
+
     EngineSnapshot get_snapshot() {
         std::lock_guard lock(mu_);
         snap_.snapshot_ts = static_cast<uint64_t>(

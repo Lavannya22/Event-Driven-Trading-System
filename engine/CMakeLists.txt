@@ -10,6 +10,11 @@ add_library(engine STATIC
     runtime/ThreadAffinityManager.cpp
     runtime/TimestampProvider.cpp
     runtime/SymbolRouter.cpp
+    backtest/ResultAggregator.cpp
+    backtest/BacktestController.cpp
+    stability/MemoryMonitor.cpp
+    stability/StabilityMonitor.cpp
+    stability/StabilityRunner.cpp
 )
 
 target_include_directories(engine PUBLIC ${CMAKE_SOURCE_DIR})

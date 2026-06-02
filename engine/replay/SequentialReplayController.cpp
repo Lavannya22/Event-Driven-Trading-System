@@ -74,8 +74,8 @@ bool SequentialReplayController::parse_line(const std::string& line,
     const auto etype = static_cast<EventType>(event_type_val);
     const auto side  = static_cast<Side>(side_val & 0x1u);
 
-    // Validate event type range
-    if (event_type_val < 1 || event_type_val > 5) return false;
+    // Validate event type range (6 = RESET, added in Phase 4)
+    if (event_type_val < 1 || event_type_val > 6) return false;
 
     out          = Event{};
     out.timestamp = timestamp;

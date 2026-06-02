@@ -12,6 +12,29 @@ OrderBook::OrderBook(uint32_t symbol_id, std::size_t max_orders, uint32_t tick_s
 {}
 
 // ---------------------------------------------------------------------------
+// Reset (Phase 4 — RESET event workflow)
+// ---------------------------------------------------------------------------
+
+void OrderBook::reset() noexcept {
+    // Clear only levels that actually held orders (count > 0).
+    for (auto& lvl : bid_levels_) {
+        if (lvl.count > 0 || lvl.total_quantity > 0) {
+            lvl.count          = 0;
+            lvl.total_quantity = 0;
+        }
+    }
+    for (auto& lvl : ask_levels_) {
+        if (lvl.count > 0 || lvl.total_quantity > 0) {
+            lvl.count          = 0;
+            lvl.total_quantity = 0;
+        }
+    }
+    orders_.clear();
+    best_bid_ = 0;
+    best_ask_ = MAX_PRICE + 1;
+}
+
+// ---------------------------------------------------------------------------
 // Public interface
 // ---------------------------------------------------------------------------
 

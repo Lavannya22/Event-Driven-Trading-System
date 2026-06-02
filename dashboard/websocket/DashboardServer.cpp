@@ -151,6 +151,59 @@ std::string DashboardServer::to_json(const EngineSnapshot& snap) {
         {"validation_passed",       snap.startup.validation_passed}
     };
 
+    // --- backtest (Phase 4) ---
+    json bt_results = json::array();
+    for (const auto& r : snap.backtest.results)
+        bt_results.push_back({
+            {"run_number",   r.run_number},
+            {"window_size",  r.window_size},
+            {"threshold",    r.threshold},
+            {"total_trades", r.total_trades},
+            {"pnl",          r.realized_pnl},
+            {"sharpe",       r.sharpe_ratio},
+            {"win_rate",     r.win_rate},
+            {"max_drawdown", r.max_drawdown}
+        });
+    json backtest = {
+        {"results",     std::move(bt_results)},
+        {"running",     snap.backtest.running},
+        {"current_run", snap.backtest.current_run},
+        {"total_runs",  snap.backtest.total_runs}
+    };
+
+    // --- stability (Phase 4) ---
+    const auto& st = snap.stability;
+    json stability = {
+        {"latency_drift_pct",        st.latency_drift_pct},
+        {"throughput_drift_pct",     st.throughput_drift_pct},
+        {"memory_current_mb",        st.memory_current_mb},
+        {"memory_peak_mb",           st.memory_peak_mb},
+        {"memory_growth_rate_mb_h",  st.memory_growth_rate_mb_h},
+        {"projected_24h_growth_mb",  st.projected_24h_growth_mb},
+        {"queue_depth_pct",          st.queue_depth_pct},
+        {"pool_exhaustions",         st.pool_exhaustions},
+        {"queue_rejections",         st.queue_rejections},
+        {"persistence_overflows",    st.persistence_overflows},
+        {"is_stable",                st.is_stable},
+        {"latency_breach_hours",     st.latency_breach_hours},
+        {"throughput_breach_hours",  st.throughput_breach_hours},
+        {"memory_breach_hours",      st.memory_breach_hours}
+    };
+
+    // --- CI status (Phase 4) ---
+    auto ci_layer = [](const CILayerStatus& l) {
+        return json{
+            {"state",        l.state},
+            {"last_run",     l.last_run},
+            {"last_failure", l.last_failure}
+        };
+    };
+    json ci = {
+        {"layer1", ci_layer(snap.ci.layer1)},
+        {"layer2", ci_layer(snap.ci.layer2)},
+        {"layer3", ci_layer(snap.ci.layer3)}
+    };
+
     return json{
         {"type",      "snapshot"},
         {"ts",        snap.snapshot_ts},
@@ -159,7 +212,10 @@ std::string DashboardServer::to_json(const EngineSnapshot& snap) {
         {"replay",    std::move(replay)},
         {"metrics",   std::move(metrics)},
         {"pools",     std::move(pools)},
-        {"startup",   std::move(startup)}
+        {"startup",   std::move(startup)},
+        {"backtest",  std::move(backtest)},
+        {"stability", std::move(stability)},
+        {"ci",        std::move(ci)}
     }.dump();
 }
 
