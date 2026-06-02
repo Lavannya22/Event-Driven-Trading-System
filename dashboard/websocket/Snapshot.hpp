@@ -38,9 +38,23 @@ struct ReplayStats {
 };
 
 struct Metrics {
-    double   throughput_eps{0.0};   // events per second
-    double   queue_occupancy{0.0};  // 0.0–1.0
-    double   avg_latency_us{0.0};
+    double   throughput_eps{0.0};     // events per second
+    double   queue_occupancy{0.0};    // 0.0–1.0
+    double   avg_latency_us{0.0};     // EMA of hot-path latency
+
+    // Live latency histogram percentiles (nanoseconds).
+    // Measured from event arrival (before strategy) to matching complete.
+    uint64_t p50_ns{0};
+    uint64_t p99_ns{0};
+    uint64_t p999_ns{0};
+    uint64_t max_ns{0};
+
+    // Tick-to-trade: time from any event arriving to a TradeExecution
+    // being produced within the same processing cycle (nanoseconds).
+    uint64_t tick_to_trade_p50_ns{0};
+    uint64_t tick_to_trade_p99_ns{0};
+    uint64_t tick_to_trade_max_ns{0};
+
     uint64_t signals{0};
     uint64_t noops{0};
 };
@@ -113,6 +127,51 @@ struct CISnapshot {
     CILayerStatus layer3;
 };
 
+// ── Phase 5 snapshot structs ──────────────────────────────────────────────────
+
+struct HardwareSnapshot {
+    std::string platform;           // "Linux bare-metal" | "WSL2 (fallbacks active)"
+    int         physical_cores{0};
+    int         logical_cpus{0};
+    bool        hyperthreading{false};
+    std::vector<int> isolated_cpus;
+    std::size_t l1_kb{0};
+    std::size_t l2_kb{0};
+    std::size_t l3_kb{0};
+    int         numa_nodes_count{0};
+    bool        huge_pages_available{false};
+    std::size_t huge_page_size_kb{0};
+    std::size_t huge_pages_free{0};
+    std::size_t huge_pages_total{0};
+    std::string simd_level;         // "AVX2" | "AVX-512" | "SSE4.2" | "scalar"
+    bool        dpdk_available{false};
+};
+
+struct OptGateEntry {
+    std::string category;
+    double      throughput_gain_pct{0.0};
+    double      latency_gain_pct{0.0};
+    bool        passed{false};
+};
+
+struct OptimizationSnapshot {
+    std::vector<std::string> enabled;   // active optimizations
+    std::vector<OptGateEntry> results;  // gate results per category
+};
+
+struct Phase5BenchRepStats {
+    double   mean_throughput{0};
+    double   best_throughput{0};
+    double   stddev_throughput{0};
+    uint64_t mean_p99_ns{0};
+    uint64_t best_p99_ns{0};
+};
+
+struct Phase5BenchSnapshot {
+    // keyed by category name
+    std::vector<std::pair<std::string, Phase5BenchRepStats>> categories;
+};
+
 // ── EngineSnapshot ────────────────────────────────────────────────────────────
 
 struct EngineSnapshot {
@@ -127,6 +186,10 @@ struct EngineSnapshot {
     BacktestSnapshot           backtest;
     StabilitySnapshot          stability;
     CISnapshot                 ci;
+    // Phase 5
+    HardwareSnapshot           hardware;
+    OptimizationSnapshot       optimization;
+    Phase5BenchSnapshot        phase5bench;
     uint64_t                   snapshot_ts{0};
 };
 

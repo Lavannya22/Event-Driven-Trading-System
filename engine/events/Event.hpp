@@ -106,11 +106,12 @@ inline Event make_market_update(uint64_t timestamp, uint32_t symbol_id,
 }
 
 inline Event make_trade_execution(uint64_t timestamp, uint32_t symbol_id,
-                                   uint64_t order_id, uint64_t price, uint64_t quantity) noexcept {
+                                   uint64_t order_id, uint64_t price, uint64_t quantity,
+                                   Side aggressor_side = Side::Bid) noexcept {
     Event e{};
     e.timestamp = timestamp;
     e.symbol_id = symbol_id;
-    e.type      = encode_type(EventType::TradeExecution);
+    e.type      = encode_type(EventType::TradeExecution, aggressor_side);
     e.price     = price;
     e.quantity  = quantity;
     e.order_id  = order_id;

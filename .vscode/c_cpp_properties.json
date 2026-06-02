@@ -1,0 +1,28 @@
+{
+  "configurations": [
+    {
+      "name": "WSL2-Clang",
+      "intelliSenseMode": "linux-clang-x64",
+      "compilerPath": "\\\\wsl$\\Ubuntu\\usr\\bin\\clang++",
+      "cppStandard": "c++20",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\c++\\15",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\x86_64-linux-gnu\\c++\\15",
+        "\\\\wsl$\\Ubuntu\\usr\\include",
+        "\\\\wsl$\\Ubuntu\\usr\\local\\include",
+        "\\\\wsl$\\Ubuntu\\usr\\lib\\llvm-21\\include",
+        "\\\\wsl$\\Ubuntu\\home\\lavan\\build\\trading-engine\\_deps\\googletest-src\\googletest\\include",
+        "\\\\wsl$\\Ubuntu\\home\\lavan\\build\\trading-engine\\_deps\\nlohmann_json-src\\include",
+        "\\\\wsl$\\Ubuntu\\home\\lavan\\build\\trading-engine\\_deps\\usockets_src-src\\src",
+        "\\\\wsl$\\Ubuntu\\home\\lavan\\build\\trading-engine\\_deps\\uwebsockets-src\\src"
+      ],
+      "defines": [
+        "__linux__",
+        "__x86_64__",
+        "WITH_POSTGRES=1"
+      ]
+    }
+  ],
+  "version": 4
+}

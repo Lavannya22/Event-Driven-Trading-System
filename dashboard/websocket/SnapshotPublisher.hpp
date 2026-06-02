@@ -68,6 +68,25 @@ public:
         snap_.metrics.avg_latency_us  = avg_latency_us;
     }
 
+    // Update live latency histogram percentiles (engine hot-path).
+    void update_latency_histogram(uint64_t p50_ns, uint64_t p99_ns,
+                                  uint64_t p999_ns, uint64_t max_ns) {
+        std::lock_guard lock(mu_);
+        snap_.metrics.p50_ns  = p50_ns;
+        snap_.metrics.p99_ns  = p99_ns;
+        snap_.metrics.p999_ns = p999_ns;
+        snap_.metrics.max_ns  = max_ns;
+    }
+
+    // Update tick-to-trade latency percentiles.
+    void update_tick_to_trade(uint64_t p50_ns, uint64_t p99_ns,
+                               uint64_t max_ns) {
+        std::lock_guard lock(mu_);
+        snap_.metrics.tick_to_trade_p50_ns = p50_ns;
+        snap_.metrics.tick_to_trade_p99_ns = p99_ns;
+        snap_.metrics.tick_to_trade_max_ns = max_ns;
+    }
+
     // Publish startup report (call once after StartupAllocator::start()).
     void update_startup(const StartupAllocator& alloc,
                         const StartupReport& report,
@@ -127,6 +146,23 @@ public:
     void update_ci(const CISnapshot& ci) {
         std::lock_guard lock(mu_);
         snap_.ci = ci;
+    }
+
+    // ── Phase 5 update methods ────────────────────────────────────────────
+
+    void update_hardware(const HardwareSnapshot& hw) {
+        std::lock_guard lock(mu_);
+        snap_.hardware = hw;
+    }
+
+    void update_optimization(const OptimizationSnapshot& opt) {
+        std::lock_guard lock(mu_);
+        snap_.optimization = opt;
+    }
+
+    void update_phase5bench(const Phase5BenchSnapshot& bench) {
+        std::lock_guard lock(mu_);
+        snap_.phase5bench = bench;
     }
 
     EngineSnapshot get_snapshot() {

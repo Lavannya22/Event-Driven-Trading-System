@@ -124,11 +124,20 @@ std::string DashboardServer::to_json(const EngineSnapshot& snap) {
 
     // --- metrics ---
     json metrics = {
-        {"throughput_eps",  snap.metrics.throughput_eps},
-        {"queue_occupancy", snap.metrics.queue_occupancy},
-        {"avg_latency_us",  snap.metrics.avg_latency_us},
-        {"signals",         snap.metrics.signals},
-        {"noops",           snap.metrics.noops}
+        {"throughput_eps",         snap.metrics.throughput_eps},
+        {"queue_occupancy",        snap.metrics.queue_occupancy},
+        {"avg_latency_us",         snap.metrics.avg_latency_us},
+        // Live engine latency histogram
+        {"p50_ns",                 snap.metrics.p50_ns},
+        {"p99_ns",                 snap.metrics.p99_ns},
+        {"p999_ns",                snap.metrics.p999_ns},
+        {"max_ns",                 snap.metrics.max_ns},
+        // Tick-to-trade
+        {"tick_to_trade_p50_ns",   snap.metrics.tick_to_trade_p50_ns},
+        {"tick_to_trade_p99_ns",   snap.metrics.tick_to_trade_p99_ns},
+        {"tick_to_trade_max_ns",   snap.metrics.tick_to_trade_max_ns},
+        {"signals",                snap.metrics.signals},
+        {"noops",                  snap.metrics.noops}
     };
 
     // --- pool utilisation ---
@@ -204,18 +213,71 @@ std::string DashboardServer::to_json(const EngineSnapshot& snap) {
         {"layer3", ci_layer(snap.ci.layer3)}
     };
 
+    // --- hardware (Phase 5) ---
+    const auto& hw = snap.hardware;
+    json iso_cpus = json::array();
+    for (int c : hw.isolated_cpus) iso_cpus.push_back(c);
+    json hardware = {
+        {"platform",             hw.platform},
+        {"physical_cores",       hw.physical_cores},
+        {"logical_cpus",         hw.logical_cpus},
+        {"hyperthreading",       hw.hyperthreading},
+        {"isolated_cpus",        std::move(iso_cpus)},
+        {"l1_kb",                hw.l1_kb},
+        {"l2_kb",                hw.l2_kb},
+        {"l3_kb",                hw.l3_kb},
+        {"numa_nodes",           hw.numa_nodes_count},
+        {"huge_pages_available", hw.huge_pages_available},
+        {"huge_page_size_kb",    hw.huge_page_size_kb},
+        {"huge_pages_free",      hw.huge_pages_free},
+        {"huge_pages_total",     hw.huge_pages_total},
+        {"simd_level",           hw.simd_level},
+        {"dpdk_available",       hw.dpdk_available}
+    };
+
+    // --- optimization (Phase 5) ---
+    json opt_enabled = json::array();
+    for (const auto& e : snap.optimization.enabled) opt_enabled.push_back(e);
+    json opt_results = json::array();
+    for (const auto& r : snap.optimization.results)
+        opt_results.push_back({
+            {"category",              r.category},
+            {"throughput_gain_pct",   r.throughput_gain_pct},
+            {"latency_gain_pct",      r.latency_gain_pct},
+            {"passed",                r.passed}
+        });
+    json optimization = {
+        {"enabled", std::move(opt_enabled)},
+        {"results", std::move(opt_results)}
+    };
+
+    // --- phase5bench (Phase 5) ---
+    json p5cats = json::object();
+    for (const auto& [name, s] : snap.phase5bench.categories)
+        p5cats[name] = {
+            {"mean_throughput",  s.mean_throughput},
+            {"best_throughput",  s.best_throughput},
+            {"stddev_throughput",s.stddev_throughput},
+            {"mean_p99_ns",      s.mean_p99_ns},
+            {"best_p99_ns",      s.best_p99_ns}
+        };
+    json phase5bench = {{"categories", std::move(p5cats)}};
+
     return json{
-        {"type",      "snapshot"},
-        {"ts",        snap.snapshot_ts},
-        {"orderbook", std::move(ob)},
-        {"trades",    std::move(trades)},
-        {"replay",    std::move(replay)},
-        {"metrics",   std::move(metrics)},
-        {"pools",     std::move(pools)},
-        {"startup",   std::move(startup)},
-        {"backtest",  std::move(backtest)},
-        {"stability", std::move(stability)},
-        {"ci",        std::move(ci)}
+        {"type",        "snapshot"},
+        {"ts",          snap.snapshot_ts},
+        {"orderbook",   std::move(ob)},
+        {"trades",      std::move(trades)},
+        {"replay",      std::move(replay)},
+        {"metrics",     std::move(metrics)},
+        {"pools",       std::move(pools)},
+        {"startup",     std::move(startup)},
+        {"backtest",    std::move(backtest)},
+        {"stability",   std::move(stability)},
+        {"ci",          std::move(ci)},
+        {"hardware",    std::move(hardware)},
+        {"optimization",std::move(optimization)},
+        {"phase5bench", std::move(phase5bench)}
     }.dump();
 }
 

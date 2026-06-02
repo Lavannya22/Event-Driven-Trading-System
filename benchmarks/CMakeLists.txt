@@ -1,6 +1,8 @@
 # ── Benchmark library (shared between runner and tests) ───────────────────────
 add_library(benchmark_lib STATIC
     BenchmarkRunner.cpp
+    AdvancedBenchmarkRunner.cpp
+    OptimizationGate.cpp
 )
 target_include_directories(benchmark_lib PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(benchmark_lib PUBLIC engine)

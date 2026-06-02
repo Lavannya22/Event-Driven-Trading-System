@@ -34,7 +34,16 @@
       "PowerShell(wsl -d Ubuntu -e sh -c \"cmake --build ~/build/trading-engine --target integration_tests -j4 2>&1 | tail -3\")",
       "PowerShell(wsl -d Ubuntu -e sh -c \"cmake --build ~/build/trading-engine --target integration_tests -j4 2>&1 | tail -3 && ctest --test-dir ~/build/trading-engine -j4 2>&1 | tail -15\")",
       "PowerShell(wsl -d Ubuntu -e sh -c \"sleep 2 && cat /tmp/dashboard.log 2>&1\")",
-      "PowerShell(Start-Process \"http://localhost:3000\")"
+      "PowerShell(Start-Process \"http://localhost:3000\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"clang++ --version | head -1 && echo 'include:' && clang++ -v 2>&1 | grep 'Selected GCC' | head -2\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ctest --test-dir ~/build/trading-engine -j1 2>&1 | tail -10\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ss -tlnp | grep 9001; ps aux | grep dashboard_server | grep -v grep\")",
+      "PowerShell(wsl -d Ubuntu -u lavan -e sh -c \"nohup ~/build/trading-engine/dashboard/websocket/dashboard_server > /tmp/dashboard.log 2>&1 & echo PID=\\\\$!\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"sleep 2 && ss -tlnp | grep 9001 && cat /tmp/dashboard.log\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"HOME=/home/lavan /home/lavan/build/trading-engine/dashboard/websocket/dashboard_server &\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ss -tlnp | grep 9001\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"ls -la /home/lavan/build/trading-engine/dashboard/websocket/dashboard_server\")",
+      "PowerShell(wsl -d Ubuntu -e sh -c \"cmake --build ~/build/trading-engine --target dashboard_server engine -j4 2>&1 | grep -E 'error:|FAILED|Linking'\")"
     ]
   }
 }

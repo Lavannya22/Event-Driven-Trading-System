@@ -55,7 +55,7 @@ MatchOutput MatchingEngine::process_new_order(OrderBook& book, const Event& aggr
             }
 
             const uint64_t fill_qty = std::min(remaining_qty, resting->quantity);
-            out.push(make_trade_execution(ts, sym, agg_id, match_price, fill_qty));
+            out.push(make_trade_execution(ts, sym, agg_id, match_price, fill_qty, agg_side));
             book.reduce(resting_id, fill_qty);
             remaining_qty -= fill_qty;
         }

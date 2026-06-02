@@ -14,6 +14,7 @@ add_executable(unit_tests
     test_result_aggregator.cpp
     test_stability_monitor.cpp
     test_overload.cpp
+    test_phase5_hardware.cpp
 )
 
 target_compile_definitions(unit_tests PRIVATE
